@@ -1,0 +1,6 @@
+body { font-family: Arial, sans-serif; padding: 20px; }
+.app { max-width: 900px; margin: 0 auto; }
+.auth { display: flex; gap: 20px; }
+.card { border: 1px solid #ddd; padding: 12px; border-radius: 8px; }
+input, button, textarea { padding: 8px; margin: 6px 0; width: 100%; }
+small { color: #666; }
