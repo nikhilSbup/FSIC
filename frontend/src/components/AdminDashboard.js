@@ -78,6 +78,7 @@ export default function AdminDashboard() {
     try {
       await API.post("/admin/stores", newStore);
       setNewStore({ name: "", email: "", address: "", ownerId: "" });
+      
       fetchLists();
     } catch (err) {
       alert(err.response?.data?.error || "Failed to add store");
@@ -139,49 +140,100 @@ export default function AdminDashboard() {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-xl font-semibold mb-4">Users</h3>
-        <table className="min-w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-2 border">ID</th>
-              <th className="px-4 py-2 border">Name</th>
-              <th className="px-4 py-2 border">Email</th>
-              <th className="px-4 py-2 border">Role</th>
-              <th className="px-4 py-2 border">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map(u => (
-              <tr key={u.id}>
-                <td className="px-4 py-2 border">{u.id}</td>
-                <td className="px-4 py-2 border">{u.name}</td>
-                <td className="px-4 py-2 border">{u.email}</td>
-                <td className="px-4 py-2 border">{u.role}</td>
-                <td className="px-4 py-2 border space-x-2">
-                  <button onClick={() => setEditingUser(u)} className="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
-                  <button onClick={() => handleDeleteUser(u.id)} className="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="space-y-6">
+      {users.map((u) => (
+        <div key={u.id} className="bg-white shadow rounded-lg p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div>
+            <p><strong>ID:</strong> {u.id}</p>
+            <p><strong>Name:</strong> {u.name}</p>
+            <p><strong>Email:</strong> {u.email}</p>
+            <p><strong>Role:</strong> {u.role}</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setEditingUser(u)}
+              className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => {
+                if (window.confirm(`Are you sure to delete ${u.name}?`)) handleDeleteUser(u.id);
+              }}
+              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ))}
 
-        {editingUser && (
-          <form onSubmit={handleUpdateUser} className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" value={editingUser.name} onChange={e => setEditingUser({ ...editingUser, name: e.target.value })} className="border p-2 rounded" />
-            <input type="email" value={editingUser.email} onChange={e => setEditingUser({ ...editingUser, email: e.target.value })} className="border p-2 rounded" />
-            <input type="text" value={editingUser.address} onChange={e => setEditingUser({ ...editingUser, address: e.target.value })} className="border p-2 rounded" />
-            <select value={editingUser.role} onChange={e => setEditingUser({ ...editingUser, role: e.target.value })} className="border p-2 rounded">
-              <option value="NORMAL_USER">Normal User</option>
-              <option value="STORE_OWNER">Store Owner</option>
-              <option value="SYSTEM_ADMIN">Admin</option>
-            </select>
-            <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Save</button>
-            <button type="button" onClick={() => setEditingUser(null)} className="bg-gray-400 text-white px-4 py-2 rounded">Cancel</button>
-          </form>
-        )}
-      </div>
+      {/* Modal for Edit User */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-11/12 md:w-1/2 shadow-lg">
+            <h3 className="text-xl font-semibold mb-4">Edit User</h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleUpdateUser(editingUser);
+                setEditingUser(null);
+              }}
+              className="grid grid-cols-1 gap-4"
+            >
+              <input
+                type="text"
+                value={editingUser.name}
+                onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                className="border p-2 rounded"
+                placeholder="Name"
+                required
+              />
+              <input
+                type="email"
+                value={editingUser.email}
+                onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                className="border p-2 rounded"
+                placeholder="Email"
+                required
+              />
+              <input
+                type="text"
+                value={editingUser.address}
+                onChange={(e) => setEditingUser({ ...editingUser, address: e.target.value })}
+                className="border p-2 rounded"
+                placeholder="Address"
+              />
+              <select
+                value={editingUser.role}
+                onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
+                className="border p-2 rounded"
+              >
+                <option value="NORMAL_USER">Normal User</option>
+                <option value="STORE_OWNER">Store Owner</option>
+                <option value="SYSTEM_ADMIN">Admin</option>
+              </select>
+
+              <div className="flex justify-end gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
 
       {/* Add Store */}
       <div className="bg-white shadow rounded-lg p-6">
