@@ -1,46 +1,105 @@
-import React, { useEffect, useState } from 'react';
-import API from '../api';
+import React, { useEffect, useState } from "react";
+import API from "../api";
 
 export default function StoreList({ user }) {
   const [stores, setStores] = useState([]);
-  const [q, setQ] = useState('');
-  const [msg, setMsg] = useState('');
-  useEffect(()=>{ fetchStores(); }, []);
+  const [q, setQ] = useState("");
+  const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchStores();
+  }, []);
+
   async function fetchStores() {
     try {
-      const res = await API.get('/stores', { params: { q } });
+      setLoading(true);
+      const res = await API.get("/stores", { params: { q } });
       setStores(res.data);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+      setMsg(err.response?.data?.message || "Failed to fetch stores");
+    } finally {
+      setLoading(false);
+    }
   }
+
   async function rate(storeId, score) {
     try {
-      const comment = prompt('Optional comment');
+      const comment = prompt("Optional comment");
       const res = await API.post(`/stores/${storeId}/rate`, { score, comment });
       setMsg(res.data.message);
       fetchStores();
-    } catch (err) { setMsg(err.response?.data?.message || err.message); }
+    } catch (err) {
+      setMsg(err.response?.data?.message || err.message);
+    }
   }
+
   return (
-    <div className="card">
-      <h3>Stores</h3>
-      <div style={{display:'flex', gap:8}}>
-        <input placeholder="Search by name" value={q} onChange={e=>setQ(e.target.value)} />
-        <button onClick={fetchStores}>Search</button>
+    <div className="bg-white shadow-xl rounded-xl p-8 max-w-4xl mx-auto mt-10">
+      <h2 className="text-3xl font-extrabold text-indigo-800 mb-6">Stores</h2>
+
+      {/* Search Box */}
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <input
+          type="text"
+          placeholder="Search stores by name or address"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="flex-grow h-14 px-6 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-400 focus:border-indigo-500 text-lg transition-all duration-200"        />
+        <button
+          onClick={fetchStores}
+          className="h-14 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-base font-semibold transition duration-200 ease-in-out"
+        >
+          Search
+        </button>
       </div>
-      <small>{msg}</small>
-      <ul>
-        {stores.map(s => (
-          <li key={s.id} style={{margin:'12px 0', borderBottom:'1px solid #eee', paddingBottom:8}}>
-            <strong>{s.name}</strong> — {s.address}<br/>
-            Average: {s.averageRating || '–'} | Your rating: {s.userRating || '–'}<br/>
-            <div style={{display:'flex', gap:6, marginTop:6}}>
-              {[1,2,3,4,5].map(n => (
-                <button key={n} onClick={()=>rate(s.id,n)}>{n}</button>
+
+      {msg && <p className="text-center text-red-500 mb-4">{msg}</p>}
+
+      {/* Loading */}
+      {loading && <p className="text-center text-gray-500">Loading stores...</p>}
+
+      {/* No Results */}
+      {!loading && stores.length === 0 && (
+        <p className="text-center text-gray-500 italic">
+          No stores found 🔍
+        </p>
+      )}
+
+      {/* Store List */}
+      <div className="space-y-6">
+        {stores.map((s) => (
+          <div
+            key={s.id}
+            className="border rounded-xl p-6 shadow-sm hover:shadow-md transition duration-200"
+          >
+            <h3 className="text-xl font-semibold text-gray-800">{s.name}</h3>
+            <p className="text-gray-600">{s.address}</p>
+            <p className="mt-2">
+              ⭐ Average:{" "}
+              <span className="font-medium text-indigo-600">
+                {s.averageRating || "–"}
+              </span>{" "}
+              | Your rating:{" "}
+              <span className="font-medium text-green-600">
+                {s.userRating || "–"}
+              </span>
+            </p>
+            <div className="flex gap-2 mt-4">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => rate(s.id, n)}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 hover:bg-indigo-500 hover:text-white font-semibold transition duration-200"
+                >
+                  {n}
+                </button>
               ))}
             </div>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
